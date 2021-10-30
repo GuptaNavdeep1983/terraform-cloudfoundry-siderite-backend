@@ -1,3 +1,8 @@
+locals {
+  postfix_name = var.name_postfix != "" ? var.name_postfix : random_id.id.hex
+  space_id     = length(var.cf_space_id) > 0 ? var.cf_space_id : data.cloudfoundry_space.space[0].id
+}
+
 resource "random_id" "id" {
   byte_length = 4
 }
@@ -5,11 +10,6 @@ resource "random_id" "id" {
 resource "random_password" "password" {
   length  = 32
   special = false
-}
-
-locals {
-  postfix_name = var.name_postfix != "" ? var.name_postfix : random_id.id.hex
-  space_id     = var.cf_space_id
 }
 
 resource "cloudfoundry_app" "hsdp_func_gateway" {
@@ -72,4 +72,10 @@ resource "cloudfoundry_service_instance" "iron" {
 resource "cloudfoundry_service_key" "iron" {
   name             = "key"
   service_instance = cloudfoundry_service_instance.iron.id
+}
+
+module "validate_space_variables" {
+  source = "./modules/validate_space_variables"
+
+  to_validate = "${var.cf_space_name}${var.cf_space_id}"
 }
